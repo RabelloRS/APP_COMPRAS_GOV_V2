@@ -1,5 +1,49 @@
 # ANOTAÇÕES API COMPRAS.GOV
 
+---
+
+## API Local (Backend `server.js`)
+
+Esta seção documenta a API interna desenvolvida para servir o frontend da aplicação. O servidor é executado com `node server.js` e opera na porta `3001`.
+
+### 1. Pesquisa Rápida de Itens
+
+- **Endpoint:** `GET /api/pesquisar-itens`
+- **Descrição:** Realiza uma busca dinâmica e unificada nas tabelas locais de `materiais` e `servicos` do banco de dados `comprasgov.db`. Retorna uma lista combinada de itens que correspondem ao termo de busca.
+- **Parâmetros de Query:**
+    - `q` (string, obrigatório): O termo de busca para a descrição do item.
+- **Exemplo de Uso:** `http://localhost:3001/api/pesquisar-itens?q=parafuso`
+- **Retorno:** Um array de objetos, onde cada objeto tem `code` e `description`.
+
+### 2. Geração de Relatório de Preços
+
+- **Endpoint:** `GET /api/relatorio-precos`
+- **Descrição:** Orquestra uma busca em tempo real na API pública do Compras.gov.br (`/precos/v1/precos`) para um item específico, agregando resultados de todas as páginas disponíveis e aplicando filtros.
+- **Parâmetros de Query:**
+    - `itemCode` (string, obrigatório): O código (PDM) do material ou serviço.
+    - `startDate` (string, opcional): Data de início no formato `YYYY-MM-DD`.
+    - `endDate` (string, opcional): Data de fim no formato `YYYY-MM-DD`.
+    - `uf` (string, opcional): Sigla da Unidade Federativa (ex: "SP", "RJ").
+- **Retorno:** Um objeto JSON contendo `summary` (com estatísticas de preço) e `data` (um array com os detalhes de cada compra encontrada).
+
+### 3. Exportação para CSV
+
+- **Endpoint:** `POST /api/exportar-csv`
+- **Descrição:** Recebe um payload JSON com os dados de um relatório e o converte para o formato CSV. Retorna o arquivo para download no navegador.
+- **Corpo da Requisição (Body):**
+    - Um objeto com a chave `data`, contendo o array de resultados do relatório a ser exportado.
+- **Retorno:** Um arquivo `relatorio.csv`.
+
+### 4. Exportação para PDF
+
+- **Endpoint:** `POST /api/exportar-pdf`
+- **Descrição:** Recebe um payload JSON com os dados de um relatório e o converte para um documento PDF tabular. Retorna o arquivo para download no navegador.
+- **Corpo da Requisição (Body):**
+    - Um objeto com a chave `data`, contendo o array de resultados, e `headers`, com os títulos das colunas.
+- **Retorno:** Um arquivo `relatorio.pdf`.
+
+---
+
 ## Sumário dos Grupos de Endpoints
 
 - Catálogo de Material
