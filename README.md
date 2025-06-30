@@ -1,3 +1,13 @@
+# APP Compras.gov - Propor Engenharia Ltda
+
+![Logo Propor](static/logo/LOGO_PROPOR_PEQUENO.jpg)
+
+## Informações Essenciais do Projeto
+- **Empresa:** Propor Engenharia Ltda
+- **CNPJ:** 41.556.670/0001-76
+- **Marca:** Propor (registrada)
+- **Responsável técnico:** Eng. Rodrigo Emanuel Rabello - CREA-RS 167.175-D
+
 # Compras.gov - Consulta de Materiais
 
 Aplicativo web para consulta de materiais e seus preços usando a API do Compras.gov (Sistema Integrado de Administração e Serviços Gerais - SIASG).
@@ -190,6 +200,45 @@ npm audit
 # Corrigir vulnerabilidades automaticamente
 npm audit fix
 ```
+
+## Scripts de Download
+
+### Materiais
+- **Baixar grupos:**
+  ```
+  node scripts/downloadGrupos.js
+  ```
+- **Baixar classes:**
+  ```
+  node scripts/downloadClasses.js
+  ```
+- **Baixar itens de um grupo (e opcionalmente classe):**
+  ```
+  node scripts/downloadItens.js <codigoGrupo> [codigoClasse]
+  ```
+  Exemplo: `node scripts/downloadItens.js 41`
+
+### Serviços
+- **Baixar toda a hierarquia de serviços (seção, divisão, grupo, classe, subclasse, itens):**
+  ```
+  node scripts/downloadServicos.js
+  ```
+
+## Dependências
+- Node.js
+- npm install axios sqlite3 express cors
+
+## Boas práticas
+- Aguarde alguns minutos entre execuções para evitar bloqueio da API (erro 429).
+- Em caso de bloqueio, aguarde o tempo indicado e rode novamente.
+- Scripts futuros terão controle automático de pausa entre requisições.
+
+## Progresso
+- [x] Download e banco de grupos, classes e itens de materiais
+- [x] Download e banco de toda a hierarquia de serviços
+- [x] Página React para visualização dos itens
+- [ ] Controle automático de pausa para evitar bloqueio
+- [ ] Exportação e filtros avançados
 
 ---
 

@@ -1,11 +1,11 @@
 import axios from 'axios';
-import { Material, MaterialSearchResponse, SearchFilters, GrupoMaterial } from '../types';
+import { Material, MaterialSearchResponse, SearchFilters, GrupoMaterial, PdmsSearchResponse } from '../types';
 
-// Base URL da API de dados abertos do Compras.gov
-const API_BASE_URL = 'https://dadosabertos.compras.gov.br';
+// A baseURL agora é tratada pelo proxy no package.json
+// const API_BASE_URL = 'https://dadosabertos.compras.gov.br';
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  // baseURL: API_BASE_URL, // Removido para usar o proxy
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -72,24 +72,21 @@ export const comprasGovApi = {
     }
   },
 
-  // Buscar materiais - vou procurar o endpoint correto na documentação
+  // Buscar materiais usando a busca por descrição
   searchMaterials: async (filters: SearchFilters): Promise<MaterialSearchResponse> => {
     try {
-      // Por enquanto, vou usar uma busca simulada até encontrar o endpoint correto
-      console.log('Buscando materiais com filtros:', filters);
-      
-      // Simular resposta para teste
-      const mockResponse = {
-        content: [],
-        totalElements: 0,
-        totalPages: 1,
-        size: filters.size || 20,
-        number: filters.page || 0,
-        first: true,
-        last: true
-      };
+      const params = new URLSearchParams();
+      if (filters.descricao) {
+        params.append('descricao', filters.descricao);
+      }
+      if (filters.pagina) {
+        params.append('pagina', filters.pagina.toString());
+      }
+      // Outros filtros podem ser adicionados aqui conforme a documentação
+      // Ex: status, codSustentavel, etc.
 
-      return mockResponse;
+      const response = await api.get(`/modulo-material/4_consultarItemMaterialPorDescricao?${params.toString()}`);
+      return response.data;
     } catch (error) {
       console.error('Erro ao buscar materiais:', error);
       throw new Error('Falha ao buscar materiais. Tente novamente.');
@@ -176,7 +173,30 @@ export const comprasGovApi = {
       console.error('Erro ao buscar preços:', error);
       throw new Error('Falha ao buscar preços do material.');
     }
-  }
+  },
+
+  // Buscar Padrões Descritivos de Material (PDMs)
+  searchPdms: async (filters: {
+    descricao?: string;
+    codigo_classe?: number;
+    order_by?: string;
+    order?: string;
+    offset?: number;
+  }): Promise<PdmsSearchResponse> => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.descricao) params.append('descricao', filters.descricao);
+      if (filters.codigo_classe) params.append('codigo_classe', filters.codigo_classe.toString());
+      if (filters.order_by) params.append('order_by', filters.order_by);
+      if (filters.order) params.append('order', filters.order);
+      if (filters.offset) params.append('offset', filters.offset.toString());
+      const response = await api.get(`/materiais/v1/pdms?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar PDMs:', error);
+      throw new Error('Falha ao buscar PDMs.');
+    }
+  },
 };
 
 export default comprasGovApi; 

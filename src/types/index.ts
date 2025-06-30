@@ -92,4 +92,20 @@ export interface GrupoMaterial {
 export interface ApiError {
   message: string;
   status: number;
+}
+
+export interface Pdm {
+  codigo: string;
+  descricao: string;
+  codigo_classe: number;
+}
+
+export interface PdmsSearchResponse {
+  content: Pdm[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
 } 

@@ -4,7 +4,8 @@
 
 @layer base {
   body {
-    font-family: 'Inter', system-ui, sans-serif;
+    @apply bg-gray-100 text-gray-800;
+    font-family: 'Inter', sans-serif;
   }
 }
 
