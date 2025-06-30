@@ -302,7 +302,143 @@ app.post('/api/exportar-pdf', (req, res) => {
   
   res.header('Content-Type', 'application/pdf');
   res.header('Content-Disposition', 'attachment; filename=relatorio_precos.pdf');
+  res.attachment('relatorio_precos.pdf');
   res.send(Buffer.from(pdfBuffer));
+});
+
+// --- NOVOS ENDPOINTS PARA ANÁLISE DE MATERIAIS ---
+
+// 1. Endpoint para Estatísticas Gerais de Materiais
+app.get('/api/materiais/stats', (req, res) => {
+  const db = new sqlite3.Database('comprasgov.db', sqlite3.OPEN_READONLY);
+  
+  const queries = {
+    totalMateriais: `SELECT COUNT(*) as count FROM materiais`,
+    totalGrupos: `SELECT COUNT(DISTINCT "Código do Grupo") as count FROM materiais`,
+    totalClasses: `SELECT COUNT(DISTINCT "Código da Classe") as count FROM materiais`,
+    totalPDMs: `SELECT COUNT(DISTINCT "Código PDM") as count FROM materiais`,
+  };
+
+  const promises = Object.entries(queries).map(([key, sql]) => {
+    return new Promise((resolve, reject) => {
+      db.get(sql, [], (err, row) => {
+        if (err) reject(err);
+        else resolve({ [key]: row.count });
+      });
+    });
+  });
+
+  Promise.all(promises)
+    .then(results => {
+      const stats = results.reduce((acc, current) => ({ ...acc, ...current }), {});
+      res.json(stats);
+    })
+    .catch(err => {
+      console.error("Erro ao buscar estatísticas de materiais:", err.message);
+      res.status(500).json({ error: 'Erro ao consultar o banco de dados.' });
+    })
+    .finally(() => {
+      db.close();
+    });
+});
+
+// 2. Endpoint para Listagem Paginada e Filtrada de Materiais
+app.get('/api/materiais', (req, res) => {
+    const { page = 1, limit = 20, grupo, classe, pdm } = req.query;
+    const offset = (page - 1) * limit;
+
+    const db = new sqlite3.Database('comprasgov.db', sqlite3.OPEN_READONLY);
+
+    let whereClauses = [];
+    let params = [];
+
+    if (grupo) {
+        whereClauses.push(`"Código do Grupo" = ?`);
+        params.push(grupo);
+    }
+    if (classe) {
+        whereClauses.push(`"Código da Classe" = ?`);
+        params.push(classe);
+    }
+    if (pdm) {
+        whereClauses.push(`"Código PDM" = ?`);
+        params.push(pdm);
+    }
+
+    const where = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
+    
+    const dataSql = `SELECT * FROM materiais ${where} LIMIT ? OFFSET ?`;
+    const countSql = `SELECT COUNT(*) as count FROM materiais ${where}`;
+
+    const dataParams = [...params, limit, offset];
+    const countParams = [...params];
+
+    const dataPromise = new Promise((resolve, reject) => {
+        db.all(dataSql, dataParams, (err, rows) => {
+            if (err) reject(err);
+            else resolve(rows);
+        });
+    });
+
+    const countPromise = new Promise((resolve, reject) => {
+        db.get(countSql, countParams, (err, row) => {
+            if (err) reject(err);
+            else resolve(row.count);
+        });
+    });
+
+    Promise.all([dataPromise, countPromise])
+        .then(([data, total]) => {
+            res.json({
+                total,
+                pages: Math.ceil(total / limit),
+                currentPage: parseInt(page, 10),
+                data,
+            });
+        })
+        .catch(err => {
+            console.error("Erro ao buscar materiais:", err.message);
+            res.status(500).json({ error: 'Erro ao consultar o banco de dados.' });
+        })
+        .finally(() => {
+            db.close();
+        });
+});
+
+// 3. Endpoints para popular os filtros
+
+app.get('/api/filtros/grupos', (req, res) => {
+    const db = new sqlite3.Database('comprasgov.db', sqlite3.OPEN_READONLY);
+    const sql = `SELECT DISTINCT "Código do Grupo" as value, "Nome do Grupo" as label FROM materiais ORDER BY "Nome do Grupo"`;
+    db.all(sql, [], (err, rows) => {
+        db.close();
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+app.get('/api/filtros/classes', (req, res) => {
+    const { grupo } = req.query;
+    if (!grupo) return res.json([]);
+    const db = new sqlite3.Database('comprasgov.db', sqlite3.OPEN_READONLY);
+    const sql = `SELECT DISTINCT "Código da Classe" as value, "Nome da Classe" as label FROM materiais WHERE "Código do Grupo" = ? ORDER BY "Nome da Classe"`;
+    db.all(sql, [grupo], (err, rows) => {
+        db.close();
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+app.get('/api/filtros/pdms', (req, res) => {
+    const { classe } = req.query;
+    if (!classe) return res.json([]);
+    const db = new sqlite3.Database('comprasgov.db', sqlite3.OPEN_READONLY);
+    const sql = `SELECT DISTINCT "Código PDM" as value, "Nome PDM" as label FROM materiais WHERE "Código da Classe" = ? ORDER BY "Nome PDM"`;
+    db.all(sql, [classe], (err, rows) => {
+        db.close();
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
 });
 
 app.listen(PORT, () => {

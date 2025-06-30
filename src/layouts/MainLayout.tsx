@@ -34,6 +34,7 @@ const Header = () => (
       <nav className="flex space-x-4">
         <NavItem to="/">Dashboard</NavItem>
         <NavItem to="/pesquisa">Pesquisa de Preços</NavItem>
+        <NavItem to="/analise-materiais">Análise de Materiais</NavItem>
       </nav>
       <div className="text-right text-sm text-gray-500">
         <p>CNPJ: 41.556.670/0001-76</p>

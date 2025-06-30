@@ -1,18 +1,17 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import MainLayout from './layouts/MainLayout';
 import DashboardPage from './pages/DashboardPage';
 import PriceResearchPage from './pages/PriceResearchPage';
+import MaterialsAnalysisPage from './pages/MaterialsAnalysisPage';
 
 function App() {
   return (
     <Router>
-      <MainLayout>
-        <Routes>
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/pesquisa" element={<PriceResearchPage />} />
-        </Routes>
-      </MainLayout>
+      <Routes>
+        <Route path="/" element={<DashboardPage />} />
+        <Route path="/pesquisa" element={<PriceResearchPage />} />
+        <Route path="/analise-materiais" element={<MaterialsAnalysisPage />} />
+      </Routes>
     </Router>
   );
 }
