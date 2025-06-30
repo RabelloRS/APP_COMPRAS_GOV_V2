@@ -6,6 +6,10 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        'propor-blue': '#0a2c52',       // Azul escuro principal
+        'propor-gold': '#d4a01d',      // Dourado para botões e destaques
+        'propor-light-gray': '#f5f5f5', // Cinza claro para fundos
+        'propor-dark-gray': '#333333',   // Cinza escuro para textos
         primary: {
           50: '#eff6ff',
           100: '#dbeafe',
